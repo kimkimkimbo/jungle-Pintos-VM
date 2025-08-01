@@ -52,11 +52,11 @@ struct page {
 	/* Per-type data are binded into the union.
 	 * Each function automatically detects the current union */
 	union {
-		struct uninit_page uninit;
-		struct anon_page anon;
-		struct file_page file;
+		struct uninit_page uninit; //초기화 전 페이지
+		struct anon_page anon; //익명 페이지
+		struct file_page file; //파일 페이지
 #ifdef EFILESYS
-		struct page_cache page_cache;
+		struct page_cache page_cache; //프로젝트4
 #endif
 	};
 };
@@ -97,10 +97,12 @@ struct supplemental_page_table {
 };
 
 #include "threads/thread.h"
+
 void supplemental_page_table_init (struct supplemental_page_table *spt);
 bool supplemental_page_table_copy (struct supplemental_page_table *dst,
 		struct supplemental_page_table *src);
 void supplemental_page_table_kill (struct supplemental_page_table *spt);
+
 struct page *spt_find_page (struct supplemental_page_table *spt,
 		void *va);
 bool spt_insert_page (struct supplemental_page_table *spt, struct page *page);
