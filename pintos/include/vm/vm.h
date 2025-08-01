@@ -4,9 +4,9 @@
 #include "threads/palloc.h"
 
 enum vm_type {
-	/* page not initialized */
+	/* page not initialized*/
 	VM_UNINIT = 0,
-	/* page not related to the file, aka anonymous page */
+	/* page not related to the file, aka anonymous page*/
 	VM_ANON = 1,
 	/* page that realated to the file */
 	VM_FILE = 2,
@@ -39,9 +39,11 @@ struct thread;
 /* The representation of "page".
  * This is kind of "parent class", which has four "child class"es, which are
  * uninit_page, file_page, anon_page, and page cache (project4).
- * DO NOT REMOVE/MODIFY PREDEFINED MEMBER OF THIS STRUCTURE. */
+ * DO NOT REMOVE/MODIFY PREDEFINED MEMBER OF THIS STRUCTURE. 
+객체 지향 프로그래밍의 상속을 모방하여 설계
+ */
 struct page {
-	const struct page_operations *operations;
+	const struct page_operations *operations; //페이지 연산을 위한 함수 테이블
 	void *va;              /* Address in terms of user space */
 	struct frame *frame;   /* Back reference for frame */
 
@@ -59,10 +61,12 @@ struct page {
 	};
 };
 
-/* The representation of "frame" */
+/* The representation of "frame" 
+물리 메모리의 한 페이지(프레임)
+*/
 struct frame {
-	void *kva;
-	struct page *page;
+	void *kva; //커널 가상 주소(Kernel Virtual Address)
+	struct page *page; //이 물리 프레임에 현재 매핑되어 있는 page 구조체에 대한 포인터
 };
 
 /* The function table for page operations.
@@ -70,8 +74,11 @@ struct frame {
  * Put the table of "method" into the struct's member, and
  * call it whenever you needed. */
 struct page_operations {
+	//스왑 공간에 저장된 페이지를 물리 메모리로 다시 가져오는(swap-in) 작업을 수행
 	bool (*swap_in) (struct page *, void *);
+	//물리 메모리의 페이지를 스왑 공간으로 내보내는(swap-out) 작업을 수행
 	bool (*swap_out) (struct page *);
+	//페이지와 관련된 모든 자원을 해제하고 정리하는 함수
 	void (*destroy) (struct page *);
 	enum vm_type type;
 };
@@ -83,7 +90,9 @@ struct page_operations {
 
 /* Representation of current process's memory space.
  * We don't want to force you to obey any specific design for this struct.
- * All designs up to you for this. */
+ * All designs up to you for this. 
+ 우리는 이 구조체에 대해 특정 설계를 따르도록 강요하지 않습니다. 모든 설계는 당신에게 달려있습니다.
+ */
 struct supplemental_page_table {
 };
 
