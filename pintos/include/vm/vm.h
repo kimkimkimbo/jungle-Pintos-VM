@@ -2,6 +2,8 @@
 #define VM_VM_H
 #include <stdbool.h>
 #include "threads/palloc.h"
+#include "lib/kernel/hash.h"
+
 
 enum vm_type {
 	/* page not initialized*/
@@ -47,7 +49,8 @@ struct page {
 	void *va;              /* Address in terms of user space */
 	struct frame *frame;   /* Back reference for frame */
 
-	/* Your implementation */
+	struct hash_elem hash_elem; //hash table elem 
+	
 
 	/* Per-type data are binded into the union.
 	 * Each function automatically detects the current union */
@@ -95,6 +98,29 @@ struct page_operations {
  */
 struct supplemental_page_table {
 };
+
+
+// 주어진 page 구조체의 가상 주소(va)를 기반으로 해시 값을 반환한다.
+unsigned
+page_hash (const struct hash_elem *elem, void *aux UNUSED){
+
+	const struct page *p = hash_entry(elem, struct page, hash_elem);
+	return hash_bytes (&p->va, sizeof p->va);
+};
+
+
+// page1의 가상 주소가 page2의 가상 주소보다 작으면 true를 반환한다. => page1이 더 "앞선다"
+bool
+page_less (const struct hash_elem *elem1, const struct hash_elem *elem2,
+			void *aux UNUSED){
+	const struct page *page1 = hash_entry(elem1, struct page, hash_elem);
+	const struct page *page2 = hash_entry(elem2, struct page, hash_elem);
+
+	return page1->va < page2->va;
+}
+
+
+
 
 #include "threads/thread.h"
 
