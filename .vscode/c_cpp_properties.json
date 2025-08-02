@@ -1,17 +1,19 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "Pintos",
             "includePath": [
                 "${workspaceFolder}/**"
             ],
             "defines": [
-                "USERPROG"
+                //"USERPROG",
+                //"FILESYS",
+                "VM"
             ],
             "compilerPath": "/usr/bin/gcc",
-            "cStandard": "c17",
-            "cppStandard": "c++17",
+            "cStandard": "c11",
             "intelliSenseMode": "linux-gcc-x64"
+            //"compilerArgs": ["-nostdinc"]
         }
     ],
     "version": 4
