@@ -49,7 +49,7 @@ struct page {
 	void *va;              /* Address in terms of user space */
 	struct frame *frame;   /* Back reference for frame */
 
-	struct hash_elem hash_elem; //hash table elem 
+	struct hash_elem hash_elem;
 	
 
 	/* Per-type data are binded into the union.
@@ -96,14 +96,14 @@ struct page_operations {
  * All designs up to you for this. 
  우리는 이 구조체에 대해 특정 설계를 따르도록 강요하지 않습니다. 모든 설계는 당신에게 달려있습니다.
  */
-struct supplemental_page_table {
+struct supplemental_page_table {	
+	struct hash spt_hash;
 };
 
 
 // 주어진 page 구조체의 가상 주소(va)를 기반으로 해시 값을 반환한다.
 unsigned
 page_hash (const struct hash_elem *elem, void *aux UNUSED){
-
 	const struct page *p = hash_entry(elem, struct page, hash_elem);
 	return hash_bytes (&p->va, sizeof p->va);
 };
@@ -111,15 +111,12 @@ page_hash (const struct hash_elem *elem, void *aux UNUSED){
 
 // page1의 가상 주소가 page2의 가상 주소보다 작으면 true를 반환한다. => page1이 더 "앞선다"
 bool
-page_less (const struct hash_elem *elem1, const struct hash_elem *elem2,
-			void *aux UNUSED){
+page_less (const struct hash_elem *elem1, const struct hash_elem *elem2, void *aux UNUSED){
 	const struct page *page1 = hash_entry(elem1, struct page, hash_elem);
 	const struct page *page2 = hash_entry(elem2, struct page, hash_elem);
 
 	return page1->va < page2->va;
 }
-
-
 
 
 #include "threads/thread.h"

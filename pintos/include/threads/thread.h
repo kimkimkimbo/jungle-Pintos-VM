@@ -138,6 +138,7 @@ struct thread {
 #ifdef VM
 	/* 스레드가 소유한 전체 가상 메모리를 위한 테이블 */
 	struct supplemental_page_table spt;
+	struct hash vm;
 #endif
 
 	/* thread.c가 소유 */

@@ -33,6 +33,7 @@
         "stdbool.h": "c",
         "directory.h": "c",
         "debug.h": "c",
-        "inode.h": "c"
+        "inode.h": "c",
+        "hash.h": "c"
     }
 }
