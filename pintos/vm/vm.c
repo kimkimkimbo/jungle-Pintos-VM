@@ -3,6 +3,8 @@
 #include "threads/malloc.h"
 #include "vm/vm.h"
 #include "vm/inspect.h"
+#include "lib/kernel/hash.h"
+
 
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
@@ -60,13 +62,27 @@ err:
 	return false;
 }
 
-/* Find VA from spt and return page. On error, return NULL. */
+/* Find VA from spt and return page. On error, return NULL. 
+보조 페이지 테이블에서, 주어진 가상 주소 va에 대응되는 struct page를 찾아 반환
+찾지 못하면 NULL을 반환*/
 struct page *
 spt_find_page (struct supplemental_page_table *spt UNUSED, void *va UNUSED) {
-	struct page *page = NULL;
-	/* TODO: Fill this function. */
+	
+	//va를 비교 기준으로 사용할 것이기 때문에, va 값만 세팅된 임시 page 객체를 생성
+	struct page page;
+	page.va = va;
 
-	return page;
+	//find_hash 함수를 사용해서 spt에서 같은 게 있는지 찾는다
+	struct hash_elem *elem = hash_find(&spt->spt_hash,&page.hash_elem);
+	
+	//있으면 page를 반환 없으면 null을 반환
+	if (elem == NULL){
+		return NULL;
+	}
+	else{
+		//찾는 page가 spt에 있으면 page로 반환해야 하니까 hash_entry 활용
+		return hash_entry(elem, struct page, hash_elem);
+	}
 }
 
 /* Insert PAGE into spt with validation. */
@@ -74,8 +90,10 @@ bool
 spt_insert_page (struct supplemental_page_table *spt UNUSED,
 		struct page *page UNUSED) {
 	int succ = false;
-	/* TODO: Fill this function. */
-
+	
+	if (hash_insert(&spt->spt_hash, &page->hash_elem) == NULL){
+		succ = true;
+	}
 	return succ;
 }
 
@@ -135,7 +153,20 @@ vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
 	struct supplemental_page_table *spt UNUSED = &thread_current ()->spt;
 	struct page *page = NULL;
 	/* TODO: Validate the fault */
-	/* TODO: Your code goes here */
+	
+	//예외 처리 - 커널 가상 메모리 범위에 존재, 읽기 전용 페이지 쓰기를 시도하는 경우
+
+	//1. 보조 페이지 테이블에서 해당 페이지 항목 찾기
+	//1-1 접근이 유효한지 확인
+	//1-2 해당 페이지 타입 확인
+
+	//2. 페이지 타입에 따른 맞춤 처리
+	//2-1 익명 페이지 
+	//swap in / out을 해야 하는지 판단!
+
+	//2-2 파일 페이지
+	//swap in / out을 해야 하는지 판단!
+
 
 	return vm_do_claim_page (page);
 }
@@ -171,15 +202,19 @@ vm_do_claim_page (struct page *page) {
 	return swap_in (page, frame->kva);
 }
 
-/* Initialize new supplemental page table */
+/* Initialize new supplemental page table 
+보조 페이지 테이블을 초기화하는 함수
+*/
 void
 supplemental_page_table_init (struct supplemental_page_table *spt UNUSED) {
+	hash_init(&spt->spt_hash, page_hash, page_less, NULL);
 }
 
 /* Copy supplemental page table from src to dst */
 bool
 supplemental_page_table_copy (struct supplemental_page_table *dst UNUSED,
 		struct supplemental_page_table *src UNUSED) {
+
 }
 
 /* Free the resource hold by the supplemental page table */
