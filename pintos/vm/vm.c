@@ -82,11 +82,20 @@ err:
 struct page *
 spt_find_page(struct supplemental_page_table *spt UNUSED, void *va UNUSED)
 {
-	struct page *page = NULL;
+	// struct page *page = NULL;
 	/* TODO: Fill this function. */
 	/* TODO: 이 함수를 완성하세요. */
 
-	return page;
+	struct page temp;
+	temp.addr = pg_round_down(va); // 페이지 단위로 정렬
+
+	struct hash_elem *e = hash_find(&spt->spt_hash, &temp.hash_elem);
+	if (e == NULL)
+	{
+		return NULL;
+	}
+
+	return hash_entry(e, struct page, hash_elem);
 }
 
 /* Insert PAGE into spt with validation. */
@@ -97,6 +106,12 @@ bool spt_insert_page(struct supplemental_page_table *spt UNUSED,
 	int succ = false;
 	/* TODO: Fill this function. */
 	/* TODO: 이 함수를 완성하세요. */
+
+	// hash_insert()는 이미 동일한 key가 있는 경우 기존의 hash_elem 포인터를 반환
+	if (hash_insert(&spt->spt_hash, &page->hash_elem) == NULL)
+	{
+		succ = true;
+	}
 
 	return succ;
 }
@@ -226,6 +241,7 @@ vm_do_claim_page(struct page *page)
 /* 새로운 보조 페이지 테이블을 초기화합니다. */
 void supplemental_page_table_init(struct supplemental_page_table *spt UNUSED)
 {
+	hash_init(&spt->spt_hash, page_hash, page_less, NULL);
 }
 
 /* Copy supplemental page table from src to dst */

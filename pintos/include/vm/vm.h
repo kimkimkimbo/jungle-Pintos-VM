@@ -95,6 +95,9 @@ struct page_operations
 /* 현재 프로세스의 메모리 공간을 나타냅니다.
  * 이 구조체에 대해 어떤 특정한 디자인을 따르도록 강요하고 싶지 않습니다.
  * 모든 디자인은 여러분에게 달려 있습니다. */
+struct supplemental_page_table
+{
+	struct hash spt_hash;
 };
 
 #include "threads/thread.h"
