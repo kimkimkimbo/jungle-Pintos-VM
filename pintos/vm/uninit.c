@@ -54,7 +54,7 @@ uninit_initialize (struct page *page, void *kva) {
 	void *aux = uninit->aux;
 
 	/* TODO: You may need to fix this function. */
-	/* 일단 anon_initialize 또는 file_initialize가 먼저 실행된 후, lazy_load_segment가 실행됨 */
+	/* 일단 anon_initializer 또는 file_initializer가 먼저 실행된 후, lazy_load_segment가 실행됨 */
 	return uninit->page_initializer (page, uninit->type, kva) &&
 		(init ? init (page, aux) : true);
 }
