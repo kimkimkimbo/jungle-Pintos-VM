@@ -785,22 +785,22 @@ install_page(void *upage, void *kpage, bool writable)
 /* 여기서부터는 프로젝트 3 이후에 사용될 코드입니다.
  * 프로젝트 2에서만 함수를 구현하려면 위의 블록에 구현하세요. */
 
-// 프로세스가 실행을 시작할 때 당장 필요한 메모리만 메인 메모리에 로딩
+// 첫 페이지 폴트 발생 시, 요청된 파일 내용을 메모리에 로드
 static bool
 lazy_load_segment(struct page *page, void *aux)
 {
 	//1. aux 구조체 형변환
 	struct lazy_load_info *info = (struct lazy_load_info*)aux;
 
-	//2. 현재 페이지의 커널 가상주소 얻기
+	//2. 물리 프레임의 커널 주소 얻기
 	uint8_t *kva = page->frame->kva;
 
 	if ( info->file != NULL){
-		//3. 파일에서 읽기
+		//3. 파일 오프셋 위치로 이동하여, 필요한 바이트 수만큼 읽기
 		file_seek(info->file, info->offset);
 		
-		//4. 페이지 정렬 규칙에 맞도록 설정
-		//4-1. 읽은 byte 수가 같은지 확인
+		//4. 남은 바이트를 0으로 채워 페이지 포맷 완성
+		//4-1. 읽은 byte 수가 같은지 확인하여 제대로 읽어졌는지 확인
 		if(file_read(info->file, kva, info->bytes_read) != (int)info->bytes_read){
 			palloc_free_page(kva);
 			return false;
