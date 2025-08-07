@@ -821,7 +821,7 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 		size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
 		size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
-		//aux 동적 할당
+		//lazy_load_segment에 정보를 전달하기 위해 aux를 설정
 		struct lazy_load_info *aux = malloc(sizeof(struct lazy_load_info));
 		//할당이 제대로 됐는지 예외 처리
 		if ( aux == NULL){ return false;}
