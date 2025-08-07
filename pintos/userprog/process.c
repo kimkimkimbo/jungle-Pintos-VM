@@ -29,6 +29,17 @@ static void __do_fork(void *);
 static void init_stack_frame(struct intr_frame *if_, char **argv, int argc); // 필요하면 직접 구현
 static void copy_to_user(struct intr_frame *if_, void *argv, int size);
 
+struct lazy_load_info{
+file *file; //파일 포인터
+off_t offset; //오프셋
+uint32_t bytes_read; //읽을 바이트 수 
+uint32_t zero_bytes; // 나머지 0으로 채울 바이트 수
+}
+
+
+
+
+
 /* initd와 다른 프로세스를 위한 일반적인 프로세스 초기화 함수. */
 static void
 process_init(void)
