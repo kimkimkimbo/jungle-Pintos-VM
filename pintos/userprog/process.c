@@ -30,14 +30,14 @@ static void init_stack_frame(struct intr_frame *if_, char **argv, int argc); // 
 static void copy_to_user(struct intr_frame *if_, void *argv, int size);
 void aux_init(struct lazy_load_info *aux, struct file *file, off_t offset, uint32_t bytes_read, uint32_t zero_bytes);
 
-//lazy_load를 위한 구조체
-struct lazy_load_info{
-	struct file *file; //파일 포인터
-	off_t offset; //오프셋
-	uint32_t bytes_read; //읽을 바이트 수 
+// lazy_load를 위한 구조체
+struct lazy_load_info
+{
+	struct file *file;	 //파일 포인터
+	off_t offset;		 //오프셋
+	uint32_t bytes_read; //읽을 바이트 수
 	uint32_t zero_bytes; // 나머지 0으로 채울 바이트 수
 };
-
 
 /* initd와 다른 프로세스를 위한 일반적인 프로세스 초기화 함수. */
 static void
@@ -790,29 +790,31 @@ install_page(void *upage, void *kpage, bool writable)
 static bool
 lazy_load_segment(struct page *page, void *aux)
 {
-	//1. aux 구조체 형변환
-	struct lazy_load_info *info = (struct lazy_load_info*)aux;
+	// 1. aux 구조체 형변환
+	struct lazy_load_info *info = (struct lazy_load_info *)aux;
 
-	//2. 물리 프레임의 커널 주소 얻기
+	// 2. 물리 프레임의 커널 주소 얻기
 	uint8_t *kva = page->frame->kva;
 
-	if ( info->file != NULL){
-		//3. 파일 오프셋 위치로 이동하여, 필요한 바이트 수만큼 읽기
+	if (info->file != NULL)
+	{
+		// 3. 파일 오프셋 위치로 이동하여, 필요한 바이트 수만큼 읽기
 		file_seek(info->file, info->offset);
-		
-		//4. 남은 바이트를 0으로 채워 페이지 포맷 완성
-		//4-1. 읽은 byte 수가 같은지 확인하여 제대로 읽어졌는지 확인
-		if(file_read(info->file, kva, info->bytes_read) != (int)info->bytes_read){
+
+		// 4. 남은 바이트를 0으로 채워 페이지 포맷 완성
+		// 4-1. 읽은 byte 수가 같은지 확인하여 제대로 읽어졌는지 확인
+		if (file_read(info->file, kva, info->bytes_read) != (int)info->bytes_read)
+		{
 			palloc_free_page(kva);
 			return false;
 		}
 
-		//4-2. 나머지 바이트는 0으로 채우기 
+		// 4-2. 나머지 바이트는 0으로 채우기
 		memset(kva + info->bytes_read, 0, info->zero_bytes);
 		return true;
-		}
+	}
 
-		return false;
+	return false;
 }
 
 /* FILE의 오프셋 OFS에서 시작하여 주소 UPAGE로 세그먼트를 로드합니다.
@@ -842,14 +844,17 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 		size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
 		size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
-		//lazy_load_segment에 정보를 전달하기 위해 aux를 설정
+		// lazy_load_segment에 정보를 전달하기 위해 aux를 설정
 		struct lazy_load_info *aux = malloc(sizeof(struct lazy_load_info));
 		//할당이 제대로 됐는지 예외 처리
-		if ( aux == NULL){ return false;}
-		//aux 초기화 및 생성하는 함수
+		if (aux == NULL)
+		{
+			return false;
+		}
+		// aux 초기화 및 생성하는 함수
 		aux_init(aux, file, ofs, read_bytes, zero_bytes);
-		
-		//aux 동적 할당 해 준 거 언젠가 free 해야 할 것.... 시기를 잘 모르겠음
+
+		// aux 동적 할당 해 준 거 언젠가 free 해야 할 것.... 시기를 잘 모르겠음
 
 		if (!vm_alloc_page_with_initializer(VM_ANON, upage,
 											writable, lazy_load_segment, aux))
@@ -863,19 +868,15 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 	return true;
 }
 
-//aux 생성 및 초기화하는 함수
-void 
-aux_init (struct lazy_load_info *aux, struct file *file, off_t offset, uint32_t bytes_read, 
-uint32_t zero_bytes){
+// aux 생성 및 초기화하는 함수
+void aux_init(struct lazy_load_info *aux, struct file *file, off_t offset, uint32_t bytes_read,
+			  uint32_t zero_bytes)
+{
 	aux->file = file;
 	aux->offset = offset;
 	aux->bytes_read = bytes_read;
 	aux->zero_bytes = zero_bytes;
 }
-
-
-
-
 
 /* USER_STACK에 스택의 PAGE를 생성합니다. 성공하면 true를 반환합니다. */
 static bool
