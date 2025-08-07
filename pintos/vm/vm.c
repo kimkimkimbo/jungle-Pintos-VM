@@ -124,7 +124,7 @@ spt_find_page(struct supplemental_page_table *spt UNUSED, void *va UNUSED)
 	/* TODO: 이 함수를 완성하세요. */
 
 	struct page temp;
-	temp.addr = pg_round_down(va); // 페이지 단위로 정렬
+	temp.va = pg_round_down(va); // 페이지 단위로 정렬
 
 	struct hash_elem *e = hash_find(&spt->spt_hash, &temp.hash_elem);
 	if (e == NULL)

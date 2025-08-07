@@ -52,7 +52,7 @@ bool hash_init(struct hash *h,
 unsigned page_hash(const struct hash_elem *p_, void *aux UNUSED)
 {
 	const struct page *p = hash_entry(p_, struct page, hash_elem);
-	return hash_bytes(&p->addr, sizeof p->addr);
+	return hash_bytes(&p->va, sizeof p->va);
 }
 
 /* 페이지 a가 페이지 b보다 앞서면 true를 반환합니다. */
@@ -61,7 +61,7 @@ bool page_less(const struct hash_elem *a_,
 {
 	const struct page *a = hash_entry(a_, struct page, hash_elem);
 	const struct page *b = hash_entry(b_, struct page, hash_elem);
-	return a->addr < b->addr;
+	return a->va < b->va;
 }
 
 /* Removes all the elements from H.
