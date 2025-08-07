@@ -28,6 +28,7 @@ static void initd(void *f_name);
 static void __do_fork(void *);
 static void init_stack_frame(struct intr_frame *if_, char **argv, int argc); // 필요하면 직접 구현
 static void copy_to_user(struct intr_frame *if_, void *argv, int size);
+void aux_init(struct lazy_load_info *aux, struct file *file, off_t offset, uint32_t bytes_read, uint32_t zero_bytes);
 
 //lazy_load를 위한 구조체
 struct lazy_load_info{
