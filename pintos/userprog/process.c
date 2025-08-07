@@ -789,9 +789,29 @@ install_page(void *upage, void *kpage, bool writable)
 static bool
 lazy_load_segment(struct page *page, void *aux)
 {
-	/* TODO: 파일에서 세그먼트를 로드합니다 */
-	/* TODO: 이것은 주소 VA에서 첫 번째 페이지 폴트가 발생할 때 호출됩니다. */
-	/* TODO: 이 함수를 호출할 때 VA를 사용할 수 있습니다. */
+	//1. aux 구조체 형변환
+	struct lazy_load_info *info = (struct lazy_load_info*)aux;
+
+	//2. 현재 페이지의 커널 가상주소 얻기
+	uint8_t *kva = page->frame->kva;
+
+	if ( info->file != NULL){
+		//3. 파일에서 읽기
+		file_seek(info->file, info->offset);
+		
+		//4. 페이지 정렬 규칙에 맞도록 설정
+		//4-1. 읽은 byte 수가 같은지 확인
+		if(file_read(info->file, kva, info->bytes_read) != (int)info->bytes_read){
+			palloc_free_page(kva);
+			return false;
+		}
+
+		//4-2. 나머지 바이트는 0으로 채우기 
+		memset(kva + info->bytes_read, 0, info->zero_bytes);
+		return true;
+		}
+
+		return false;
 }
 
 /* FILE의 오프셋 OFS에서 시작하여 주소 UPAGE로 세그먼트를 로드합니다.
