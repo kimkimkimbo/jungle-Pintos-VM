@@ -4,6 +4,8 @@
 #include "threads/malloc.h"
 #include "vm/vm.h"
 #include "vm/inspect.h"
+#include "include/threads/vaddr.h"
+#include <hash.h>
 
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
@@ -12,6 +14,8 @@ void vm_init(void)
 {
 	vm_anon_init();
 	vm_file_init();
+	list_init(&frame_table);
+	lock_init(&frame_table_lock);
 #ifdef EFILESYS /* For project 4 */
 	pagecache_init();
 #endif
@@ -51,6 +55,8 @@ static struct frame *vm_evict_frame(void);
  * `vm_alloc_page`. */
 /* 초기화 함수를 사용하여 보류 중인(pending) 페이지 객체를 생성합니다. 페이지를 생성하려면
  * 직접 생성하지 말고 이 함수 또는 `vm_alloc_page`를 통해 생성해야 합니다. */
+// 새로운 페이지 요청이 커널에 들어오면, 먼저 vm_alloc_page_with_initializer 함수가 호출됨
+// 새로운 페이지 구조체를 할당하고, 페이지 타입에 따라 적절한 초기화 함수를 설정
 bool vm_alloc_page_with_initializer(enum vm_type type, void *upage, bool writable,
 									vm_initializer *init, void *aux)
 {
@@ -70,8 +76,39 @@ bool vm_alloc_page_with_initializer(enum vm_type type, void *upage, bool writabl
 		 * TODO: uninit_new를 호출하여 "uninit" 페이지 구조체를 생성하세요.
 		 * TODO: uninit_new를 호출한 후 필드를 수정해야 합니다. */
 
+		// 페이지 생성 (새로운 페이지 구조체 할당)
+		struct page *page = (struct page *)maloc(sizeof(struct page));
+		if (page == NULL)
+			return false;
+
+		// VM 타입에 따른 초기화 함수 설정
+		bool (*page_initilazer)(struct page *, enum vm_type type, void *aux) = NULL;
+
+		switch (VM_TYPE(type))
+		{
+		case VM_ANON: // 익명 페이지의 경우
+			page_initilazer = anon_initializer;
+			break;
+		case VM_FILE: // 파일 기반 페이지의 경우
+			page_initilazer = file_backed_initializer;
+			break;
+		default:
+			free(page);
+			return false;
+		}
+
+		page->writable = writable;
+
+		// uninit_new를 호출하여 "uninit" 페이지 구조체를 생성
+		uninit_new(page, upage, init, type, aux, page_initilazer);
+
 		/* TODO: Insert the page into the spt. */
 		/* TODO: 페이지를 spt에 삽입하세요. */
+		if (!spt_insert_page(spt, page))
+		{
+			free(page);
+			return false;
+		}
 	}
 err:
 	return false;
@@ -163,6 +200,26 @@ vm_get_frame(void)
 	/* TODO: Fill this function. */
 	/* TODO: 이 함수를 완성하세요. */
 
+	// 사용자 풀에서 새 물리 페이지를 가져옴
+	void *kva = palloc_get_page(PAL_USER);
+	if (kva == NULL)
+	{
+		PANIC("todo");
+	}
+
+	// 프레임 할당
+	frame = malloc(sizeof(struct frame));
+	if (frame == NULL)
+		PANIC("todo");
+
+	// 멤버 초기화
+	frame->kva = kva;
+	frame->page = NULL;
+
+	lock_acquire(&frame_table_lock);
+	list_push_back(&frame_table, &frame->elem);
+	lock_release(&frame_table_lock);
+
 	ASSERT(frame != NULL);
 	ASSERT(frame->page == NULL);
 	return frame;
@@ -211,9 +268,14 @@ void vm_dealloc_page(struct page *page)
 /* VA에 할당된 페이지를 클레임(claim)합니다. */
 bool vm_claim_page(void *va UNUSED)
 {
-	struct page *page = NULL;
+	struct thread *curr = thread_current();
 	/* TODO: Fill this function */
 	/* TODO: 이 함수를 완성하세요. */
+	// 주어진 가상 주소 va에 대해서 페이지 할당
+	// SPT를 확인하고 va에 해당하는 page를 가져오기
+	struct page *page = spt_find_page(&curr->spt, va);
+	if (page == NULL)
+		return false;
 
 	return vm_do_claim_page(page);
 }
@@ -233,6 +295,10 @@ vm_do_claim_page(struct page *page)
 	/* TODO: Insert page table entry to map page's VA to frame's PA. */
 	/* TODO: 페이지의 가상 주소(VA)를 프레임의 물리 주소(PA)에 매핑하는
 	 * TODO: 페이지 테이블 엔트리를 삽입하세요. */
+	struct thread *curr = thread_current();
+	bool success = pml4_set_page(curr->pml4, page->va, frame->kva, page->writable);
+	if (!success)
+		return false;
 
 	return swap_in(page, frame->kva);
 }
