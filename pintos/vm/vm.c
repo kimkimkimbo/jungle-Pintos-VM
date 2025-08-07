@@ -97,6 +97,8 @@ bool vm_alloc_page_with_initializer(enum vm_type type, void *upage, bool writabl
 			return false;
 		}
 
+		page->writable = writable;
+
 		// uninit_new를 호출하여 "uninit" 페이지 구조체를 생성
 		uninit_new(page, upage, init, type, aux, page_initilazer);
 
@@ -294,7 +296,7 @@ vm_do_claim_page(struct page *page)
 	/* TODO: 페이지의 가상 주소(VA)를 프레임의 물리 주소(PA)에 매핑하는
 	 * TODO: 페이지 테이블 엔트리를 삽입하세요. */
 	struct thread *curr = thread_current();
-	bool success = pml4_set_page(curr->pml4, page->va, frame->kva, true);
+	bool success = pml4_set_page(curr->pml4, page->va, frame->kva, page->writable);
 	if (!success)
 		return false;
 

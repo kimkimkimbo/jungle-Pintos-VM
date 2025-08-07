@@ -49,7 +49,7 @@ struct page
 
 	/* Your implementation */
 	struct hash_elem hash_elem;
-	void *addr;
+	bool writable;
 
 	/* Per-type data are binded into the union.
 	 * Each function automatically detects the current union */
@@ -69,7 +69,11 @@ struct frame
 {
 	void *kva;
 	struct page *page;
+	struct list_elem elem;
 };
+
+struct list frame_table;
+struct lock frame_table_lock;
 
 /* The function table for page operations.
  * This is one way of implementing "interface" in C.
