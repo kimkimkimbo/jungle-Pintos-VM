@@ -29,15 +29,13 @@ static void __do_fork(void *);
 static void init_stack_frame(struct intr_frame *if_, char **argv, int argc); // 필요하면 직접 구현
 static void copy_to_user(struct intr_frame *if_, void *argv, int size);
 
+//lazy_load를 위한 구조체
 struct lazy_load_info{
-file *file; //파일 포인터
-off_t offset; //오프셋
-uint32_t bytes_read; //읽을 바이트 수 
-uint32_t zero_bytes; // 나머지 0으로 채울 바이트 수
-}
-
-
-
+	struct file *file; //파일 포인터
+	off_t offset; //오프셋
+	uint32_t bytes_read; //읽을 바이트 수 
+	uint32_t zero_bytes; // 나머지 0으로 채울 바이트 수
+};
 
 
 /* initd와 다른 프로세스를 위한 일반적인 프로세스 초기화 함수. */
@@ -823,8 +821,15 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 		size_t page_read_bytes = read_bytes < PGSIZE ? read_bytes : PGSIZE;
 		size_t page_zero_bytes = PGSIZE - page_read_bytes;
 
-		/* TODO: lazy_load_segment에 정보를 전달하기 위해 aux를 설정합니다. */
-		void *aux = NULL;
+		//aux 동적 할당
+		struct lazy_load_info *aux = malloc(sizeof(struct lazy_load_info));
+		//할당이 제대로 됐는지 예외 처리
+		if ( aux == NULL){ return false;}
+		//aux 초기화 및 생성하는 함수
+		aux_init(aux, file, ofs, read_bytes, zero_bytes);
+		
+		//aux 동적 할당 해 준 거 언젠가 free 해야 할 것.... 시기를 잘 모르겠음
+
 		if (!vm_alloc_page_with_initializer(VM_ANON, upage,
 											writable, lazy_load_segment, aux))
 			return false;
@@ -836,6 +841,20 @@ load_segment(struct file *file, off_t ofs, uint8_t *upage,
 	}
 	return true;
 }
+
+//aux 생성 및 초기화하는 함수
+void 
+aux_init (struct lazy_load_info *aux, struct file *file, off_t offset, uint32_t bytes_read, 
+uint32_t zero_bytes){
+	aux->file = file;
+	aux->offset = offset;
+	aux->bytes_read = bytes_read;
+	aux->zero_bytes = zero_bytes;
+}
+
+
+
+
 
 /* USER_STACK에 스택의 PAGE를 생성합니다. 성공하면 true를 반환합니다. */
 static bool
