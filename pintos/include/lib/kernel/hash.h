@@ -26,6 +26,7 @@
 
 #include "debug.h"
 #include "list.h"
+#include "debug.h"
 
 /* Hash element. */
 struct hash_elem

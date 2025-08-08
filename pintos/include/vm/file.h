@@ -3,12 +3,15 @@
 #include "filesys/file.h"
 #include "vm/vm.h"
 
+struct file_page
+{
+	bool is_swaped_out;
+};
+
 struct page;
 enum vm_type;
 
-struct file_page
-{
-};
+
 
 void vm_file_init(void);
 bool file_backed_initializer(struct page *page, enum vm_type type, void *kva);
