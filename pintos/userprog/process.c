@@ -884,13 +884,25 @@ void aux_init(struct lazy_load_info *aux, struct file *file, off_t offset, uint3
 static bool
 setup_stack(struct intr_frame *if_)
 {
+	uint8_t *kpage;
 	bool success = false;
 	void *stack_bottom = (void *)(((uint8_t *)USER_STACK) - PGSIZE);
+	struct thread *t = thread_current();
 
 	/* TODO: stack_bottom에 스택을 매핑하고 즉시 페이지를 요청합니다.
 	 * TODO: 성공하면 rsp를 적절히 설정합니다.
 	 * TODO: 페이지가 스택임을 표시해야 합니다. */
 	/* TODO: 여기에 코드를 작성하세요 */
+
+	kpage = palloc_get_page(PAL_USER | PAL_ZERO);
+	if (kpage != NULL)
+	{
+		success = (pml4_get_page(t->pml4, stack_bottom) == NULL && pml4_set_page(t->pml4, stack_bottom, kpage, true));
+		if (success)
+			if_->rsp = USER_STACK;
+		else
+			palloc_free_page(kpage);
+	}
 
 	return success;
 }
