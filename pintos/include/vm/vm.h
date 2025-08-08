@@ -73,8 +73,8 @@ struct frame
 	struct list_elem elem;
 };
 
-struct list frame_table;
-struct lock frame_table_lock;
+extern struct list frame_table;
+extern struct lock frame_table_lock;
 
 /* The function table for page operations.
  * This is one way of implementing "interface" in C.

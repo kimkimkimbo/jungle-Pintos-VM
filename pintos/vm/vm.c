@@ -10,6 +10,9 @@
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
 /* 각 서브시스템의 초기화 코드를 호출하여 가상 메모리 서브시스템을 초기화합니다. */
+struct list frame_table;
+struct lock frame_table_lock;
+
 void vm_init(void)
 {
 	vm_anon_init();
