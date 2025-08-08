@@ -2,7 +2,6 @@
 
 #include "vm/vm.h"
 #include "threads/mmu.h" // PGSIZE 때문에 추가
-#include "vm/file.h" // 이게 없었다니
 
 static bool file_backed_swap_in(struct page *page, void *kva);
 static bool file_backed_swap_out(struct page *page);
@@ -59,8 +58,8 @@ do_mmap (void *addr, size_t length, int writable,
 	/* 일단 페이지 몇개가 필요한지 계산 */
 	/* length /  */
 	
-	if (vm_alloc_page_with_initializer(VM_FILE, addr, writable, )) //?
-		return addr;
+	// if (vm_alloc_page_with_initializer(VM_FILE, addr, writable, )) //?
+	// 	return addr;
 	
 
 }

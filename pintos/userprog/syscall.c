@@ -12,7 +12,6 @@
 #include "threads/interrupt.h"
 #include "threads/loader.h"
 #include "threads/malloc.h"
-#include "vm/file.h" // mmap(), munmap() 때문에 추가
 #include "vm/vm.h" // mmap(), munmap() 때문에 추가
 #include <round.h> // mmap() 때문에 추가 - ROUND_UP
 #include "threads/palloc.h"

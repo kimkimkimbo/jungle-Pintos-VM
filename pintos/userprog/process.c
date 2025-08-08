@@ -24,6 +24,14 @@
 #include "vm/vm.h"
 #endif
 
+struct lazy_load_info
+{
+    struct file *file;    //파일 포인터
+    off_t offset;         //오프셋
+    uint32_t bytes_read;  //읽을 바이트 수
+    uint32_t zero_bytes;  // 나머지 0으로 채울 바이트 수
+};
+
 static void process_cleanup(void);
 // static bool load (const char *file_name, struct intr_frame *if_);
 static void initd(void *f_name);
@@ -35,13 +43,7 @@ void aux_init(struct lazy_load_info *aux, struct file *file, off_t offset,
               uint32_t bytes_read, uint32_t zero_bytes);
 
 // lazy_load를 위한 구조체
-struct lazy_load_info
-{
-    struct file *file;    //파일 포인터
-    off_t offset;         //오프셋
-    uint32_t bytes_read;  //읽을 바이트 수
-    uint32_t zero_bytes;  // 나머지 0으로 채울 바이트 수
-};
+
 
 /* initd와 다른 프로세스를 위한 일반적인 프로세스 초기화 함수. */
 static void process_init(void)
