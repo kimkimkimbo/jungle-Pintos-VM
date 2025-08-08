@@ -322,83 +322,47 @@ bool supplemental_page_table_copy(struct supplemental_page_table *dst UNUSED,
 {
     /*- gitbook `src`의 모든 페이지를 순회하면서 `dst`에 동일한 항목을 생성합니다. 이때, `uninit` 페이지를 즉시 할당(claim)*/
 
-/*
-src의 spt를 순회하면서 각 struct page에 대해 dst에 struct page 하나 새로 생성
-page->va, page->operations, type, writable, 등 주요 정보 복사
-uninit이면 즉시 메모리 할당 (vm_claim_page) 아니라면 내용도 복사 (예: anon이면 메모리 복사)
-*/
+    //src를 순회하기 위한 준비 hash_iterator 주석으로 권유하는 방법
+    struct hash_iterator i;
 
-//src의 spt를 순회하기 위한 준비 hash_iterator 주석으로 권유하는 방법
-struct hash_iterator i;
+    hash_first (&i, &src->spt_hash);
 
-   hash_first (&i, &src->spt_hash);
+    while (hash_next (&i))
+    {
+        //spt 안 page 정보를 복사해야 하므로 page 생성
+        struct page *src_page = hash_entry (hash_cur (&i), struct page, hash_elem);
 
-   while (hash_next (&i))
-   {
-   //spt page 전부를 dst에 복사해야 하니까 page로 생성하기
-    struct page *spt_page = hash_entry (hash_cur (&i), struct page, hash_elem);
+        //va, type, writable, 변수 생성 후 초기화
+        void *va = src_page->va;
+        enum vm_type type = page_get_type(src_page);
+        bool writable = src_page->writable;
 
-    //부모와 자식이 같은 page를 공유하면 안 되기 때문에 새로운 page를 생성
-    //va, operations, type, writable 복사
-   void *dst_va = spt_page->va;
-   bool dst_ops = spt_page->operations;
-   enum vm_type dst_type = spt_page->operations->type;
-   bool dst_writable = spt_page->writable;
+        //TYPE = VM_UNINIT일 경우 따로 처리
+        if (type == VM_UNINIT){
 
-   //dst에 page 복사
-   //vm_alloc_page_with_initializer() 함수 사용해서 dst에 page 생성
-   //init, aux는 뭘로 보내야 하지?
-   vm_alloc_page_with_initializer(dst_type, dst_va, dst_writable, init, aux);
+            // init, aux는 lazy loading을 위해 필요한 함수 포인터와 context 정보이므로,
+            // 자식도 동일한 방식으로 lazy load가 가능하게 하기 위해 그대로 복사해야 함
+            struct uninit_page *uninit = &src_page->uninit;
 
-   //type = uninit 이면 즉시 vm_do_claim_page()
+            if (!vm_alloc_page_with_initializer(type, va, writable, uninit->init, uninit->aux)) { return false; }
 
+            //type = uninit 이면 즉시 할당 vm_do_claim_page()
+            if (!vm_do_claim_page(va)) {return false;}
 
-   //anon 메모리 복사
-   
-   }
-   return true;
+        }else{
+            //anon, file page 처리
+            vm_alloc_page(type, va, writable);
+            if (!vm_do_claim_page(va)) {return false;}
+
+            struct page *dst_page = spt_find_page(dst, va);
+
+            //물리 메모리까지 복사
+            memcpy(dst_page->frame->kva, src_page->frame->kva, PGSIZE);
+        }
+    }
+    return true;
 }
 
-/* Copy supplemental page table from src to dst */
-/* 보조 페이지 테이블을 src에서 dst로 복사합니다. fork()의 일부*/
-bool supplemental_page_table_copy(struct supplemental_page_table *dst UNUSED,
-                                  struct supplemental_page_table *src UNUSED)
-{
-    /*- `src`의 모든 페이지를 순회하면서 `dst`에 동일한 항목을 생성합니다.
-- 이때, `uninit` 페이지를 즉시 할당(claim)*/
-
-/*
-src의 spt를 순회하면서
-
-각 struct page에 대해
-
-dst에 struct page 하나 새로 생성
-
-page->va, page->operations, type, writable, 등 주요 정보 복사
-
-uninit이면 즉시 메모리 할당 (vm_claim_page)
-
-아니라면 내용도 복사 (예: anon이면 메모리 복사)
-
-
-*/
-//src의 spt를 순회하기 위한 준비 hash_iterator 주석으로 권유하는 방법
-struct hash_iterator i;
-
-   hash_first (&i, &src->spt_hash);
-
-   while (hash_next (&i))
-   {
-   //page를 생성해야 spt 안에 page를 전부 복사
-    struct page *dst_page = hash_entry (hash_cur (&i), struct page, hash_elem);
-
-   
-
-
-   }
-
-    
-}
 
 /* Free the resource hold by the supplemental page table */
 /* 보조 페이지 테이블이 소유한 자원을 해제합니다. */
