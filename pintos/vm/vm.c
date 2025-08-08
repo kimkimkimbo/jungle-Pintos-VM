@@ -80,7 +80,7 @@ bool vm_alloc_page_with_initializer(enum vm_type type, void *upage, bool writabl
 		 * TODO: uninit_new를 호출한 후 필드를 수정해야 합니다. */
 
 		// 페이지 생성 (새로운 페이지 구조체 할당)
-		struct page *page = (struct page *)maloc(sizeof(struct page));
+		struct page *page = (struct page *)malloc(sizeof(struct page));
 		if (page == NULL)
 			return false;
 
