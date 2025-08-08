@@ -1,1 +1,9 @@
+pt-write-code FAIL
+pt-bad-read FAIL
+pt-bad-addr FAIL
+pt-write-code2 FAIL
 args-none FAIL
+pt-grow-bad FAIL
+pt-grow-stk-sc FAIL
+pt-grow-stack FAIL
+pt-big-stk-obj FAIL

@@ -2,8 +2,8 @@
 #define DEVICES_DISK_H
 
 #include <inttypes.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 /* Size of a disk sector in bytes. */
 #define DISK_SECTOR_SIZE 512
@@ -13,29 +13,30 @@
 typedef uint32_t disk_sector_t;
 
 /* An ATA device. */
-struct disk {
-	char name[8];               /* Name, e.g. "hd0:1". */
-	struct channel *channel;    /* Channel disk is on. */
-	int dev_no;                 /* Device 0 or 1 for master or slave. */
+struct disk
+{
+    char name[8];            /* Name, e.g. "hd0:1". */
+    struct channel *channel; /* Channel disk is on. */
+    int dev_no;              /* Device 0 or 1 for master or slave. */
 
-	bool is_ata;                /* 1=This device is an ATA disk. */
-	disk_sector_t capacity;     /* Capacity in sectors (if is_ata). */
+    bool is_ata;            /* 1=This device is an ATA disk. */
+    disk_sector_t capacity; /* Capacity in sectors (if is_ata). */
 
-	long long read_cnt;         /* Number of sectors read. */
-	long long write_cnt;        /* Number of sectors written. */
+    long long read_cnt;  /* Number of sectors read. */
+    long long write_cnt; /* Number of sectors written. */
 };
 
 /* Format specifier for printf(), e.g.:
  * printf ("sector=%"PRDSNu"\n", sector); */
 #define PRDSNu PRIu32
 
-void disk_init (void);
-void disk_print_stats (void);
+void disk_init(void);
+void disk_print_stats(void);
 
-struct disk *disk_get (int chan_no, int dev_no);
-disk_sector_t disk_size (struct disk *);
-void disk_read (struct disk *, disk_sector_t, void *);
-void disk_write (struct disk *, disk_sector_t, const void *);
+struct disk *disk_get(int chan_no, int dev_no);
+disk_sector_t disk_size(struct disk *);
+void disk_read(struct disk *, disk_sector_t, void *);
+void disk_write(struct disk *, disk_sector_t, const void *);
 
-void 	register_disk_inspect_intr ();
+void register_disk_inspect_intr();
 #endif /* devices/disk.h */
