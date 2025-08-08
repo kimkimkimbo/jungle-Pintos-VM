@@ -12,17 +12,24 @@
 #include "threads/interrupt.h"
 #include "threads/loader.h"
 #include "threads/malloc.h"
+#include "vm/vm.h" // mmap(), munmap() 때문에 추가
+#include <round.h> // mmap() 때문에 추가 - ROUND_UP
 #include "threads/palloc.h"
 #include "threads/synch.h"
 #include "threads/thread.h"
 #include "userprog/gdt.h"
 #include "userprog/process.h"  // fork() 때문에 추가
-#include "vm/file.h"
 
 void syscall_entry(void);
 void syscall_handler(struct intr_frame *);
 
 static struct lock filesys_lock;
+struct mmap_page_info {
+	struct file *file;
+	size_t length;
+	off_t offset;
+
+};
 
 /* 시스템 콜.
  *
@@ -277,9 +284,22 @@ void *mmap(void *addr, size_t length, int writable, int fd, off_t offset)
 
     if (t->fdt[fd]->entry == NULL) return NULL;
 
-    struct file *opened_file = t->fdt[fd]->entry;
+	if (pg_ofs(addr) != 0)
+		return NULL;
 
-    return do_mmap(addr, length, writable, opened_file, offset);
+	struct file *opened_file = t->fdt[fd]->entry;
+	struct mmap_page_info *aux = malloc(sizeof(struct mmap_page_info));
+
+
+
+	aux->file = opened_file;
+	aux->length = length;
+	aux->offset = offset;
+
+	if (!vm_alloc_page_with_initializer(VM_FILE, addr, writable, do_mmap, aux))
+		return NULL;
+	
+	return addr;
 }
 
 void munmap(void *addr)

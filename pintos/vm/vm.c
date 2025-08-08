@@ -2,7 +2,6 @@
 /* vm.c: 가상 메모리 객체를 위한 일반적인 인터페이스. */
 
 #include "vm/vm.h"
-
 #include <hash.h>
 
 #include "include/threads/vaddr.h"
@@ -116,6 +115,7 @@ bool vm_alloc_page_with_initializer(enum vm_type type, void *upage,
             free(page);
             return false;
         }
+			return true;
     }
 err:
     return false;
@@ -253,6 +253,10 @@ bool vm_try_handle_fault(struct intr_frame *f UNUSED, void *addr UNUSED,
     /* TODO: 폴트의 유효성을 검사하세요. */
     /* TODO: Your code goes here */
     /* TODO: 여기에 코드를 작성하세요. */
+
+		if (is_kernel_vaddr(addr)) return false;
+
+		if ((page = spt_find_page(spt, addr)) == NULL) return false;
 
     return vm_do_claim_page(page);
 }

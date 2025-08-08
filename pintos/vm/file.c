@@ -1,6 +1,7 @@
 /* file.c: Implementation of memory backed file object (mmaped object). */
 
 #include "vm/vm.h"
+#include "threads/mmu.h" // PGSIZE 때문에 추가
 
 static bool file_backed_swap_in(struct page *page, void *kva);
 static bool file_backed_swap_out(struct page *page);
@@ -25,7 +26,8 @@ bool file_backed_initializer(struct page *page, enum vm_type type, void *kva)
     /* Set up the handler */
     page->operations = &file_ops;
 
-    struct file_page *file_page = &page->file;
+	struct file_page *file_page = &page->file;
+	file_page->is_swaped_out = false;
 }
 
 /* Swap in the page by read contents from the file. */
@@ -46,10 +48,20 @@ static void file_backed_destroy(struct page *page)
     struct file_page *file_page UNUSED = &page->file;
 }
 
-/* Do the mmap */
-void *do_mmap(void *addr, size_t length, int writable, struct file *file,
-              off_t offset)
-{
+/* Do the mmap - 얘가 마치 lazy_load_segment와 같은 역할을 해야 할 듯 */
+void *
+do_mmap (void *addr, size_t length, int writable,
+		struct file *file, off_t offset) {
+	if ((uint64_t)addr % PGSIZE != 0 || addr == 0 || length == 0) // addr가 페이지 정렬되어있어야 한다는 조건 구현 - 아닐수도 있음
+		return NULL;
+
+	/* 일단 페이지 몇개가 필요한지 계산 */
+	/* length /  */
+	
+	// if (vm_alloc_page_with_initializer(VM_FILE, addr, writable, )) //?
+	// 	return addr;
+	
+
 }
 
 /* Do the munmap */
