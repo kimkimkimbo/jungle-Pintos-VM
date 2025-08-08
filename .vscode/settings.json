@@ -1,4 +1,6 @@
 {
+    "editor.fontSize": 12,
+    "editor.tabSize": 2,
     "files.associations": {
         "string": "c",
         "array": "c",
