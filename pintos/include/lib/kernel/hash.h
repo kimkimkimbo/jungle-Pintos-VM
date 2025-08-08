@@ -24,6 +24,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "list.h"
+#include "debug.h"
 
 /* Hash element. */
 struct hash_elem

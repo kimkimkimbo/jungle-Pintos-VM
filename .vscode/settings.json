@@ -65,6 +65,10 @@
         "tuple": "c",
         "typeinfo": "c",
         "utility": "c",
-        "vm.h": "c"
+        "vm.h": "c",
+        "inttypes.h": "c",
+        "bitmap.h": "c",
+        "cksum.h": "c",
+        "arc4.h": "c"
     }
 }

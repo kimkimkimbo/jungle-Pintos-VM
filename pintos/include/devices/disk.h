@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 /* Size of a disk sector in bytes. */
 #define DISK_SECTOR_SIZE 512

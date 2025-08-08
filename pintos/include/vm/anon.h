@@ -5,6 +5,7 @@ struct page;
 enum vm_type;
 
 struct anon_page {
+    bool is_swaped_out;
     size_t swap_table_idx;
 };
 
