@@ -316,6 +316,84 @@ void supplemental_page_table_init(struct supplemental_page_table *spt UNUSED)
 bool supplemental_page_table_copy(struct supplemental_page_table *dst UNUSED,
                                   struct supplemental_page_table *src UNUSED)
 {
+    /*- gitbook `src`의 모든 페이지를 순회하면서 `dst`에 동일한 항목을 생성합니다. 이때, `uninit` 페이지를 즉시 할당(claim)*/
+
+/*
+src의 spt를 순회하면서 각 struct page에 대해 dst에 struct page 하나 새로 생성
+page->va, page->operations, type, writable, 등 주요 정보 복사
+uninit이면 즉시 메모리 할당 (vm_claim_page) 아니라면 내용도 복사 (예: anon이면 메모리 복사)
+*/
+
+//src의 spt를 순회하기 위한 준비 hash_iterator 주석으로 권유하는 방법
+struct hash_iterator i;
+
+   hash_first (&i, &src->spt_hash);
+
+   while (hash_next (&i))
+   {
+   //spt page 전부를 dst에 복사해야 하니까 page로 생성하기
+    struct page *spt_page = hash_entry (hash_cur (&i), struct page, hash_elem);
+
+    //부모와 자식이 같은 page를 공유하면 안 되기 때문에 새로운 page를 생성
+    //va, operations, type, writable 복사
+   void *dst_va = spt_page->va;
+   bool dst_ops = spt_page->operations;
+   enum vm_type dst_type = spt_page->operations->type;
+   bool dst_writable = spt_page->writable;
+
+   //dst에 page 복사
+   //vm_alloc_page_with_initializer() 함수 사용해서 dst에 page 생성
+   //init, aux는 뭘로 보내야 하지?
+   vm_alloc_page_with_initializer(dst_type, dst_va, dst_writable, init, aux);
+
+   //type = uninit 이면 즉시 vm_do_claim_page()
+
+
+   //anon 메모리 복사
+   
+   }
+   return true;
+}
+
+/* Copy supplemental page table from src to dst */
+/* 보조 페이지 테이블을 src에서 dst로 복사합니다. fork()의 일부*/
+bool supplemental_page_table_copy(struct supplemental_page_table *dst UNUSED,
+                                  struct supplemental_page_table *src UNUSED)
+{
+    /*- `src`의 모든 페이지를 순회하면서 `dst`에 동일한 항목을 생성합니다.
+- 이때, `uninit` 페이지를 즉시 할당(claim)*/
+
+/*
+src의 spt를 순회하면서
+
+각 struct page에 대해
+
+dst에 struct page 하나 새로 생성
+
+page->va, page->operations, type, writable, 등 주요 정보 복사
+
+uninit이면 즉시 메모리 할당 (vm_claim_page)
+
+아니라면 내용도 복사 (예: anon이면 메모리 복사)
+
+
+*/
+//src의 spt를 순회하기 위한 준비 hash_iterator 주석으로 권유하는 방법
+struct hash_iterator i;
+
+   hash_first (&i, &src->spt_hash);
+
+   while (hash_next (&i))
+   {
+   //page를 생성해야 spt 안에 page를 전부 복사
+    struct page *dst_page = hash_entry (hash_cur (&i), struct page, hash_elem);
+
+   
+
+
+   }
+
+    
 }
 
 /* Free the resource hold by the supplemental page table */
